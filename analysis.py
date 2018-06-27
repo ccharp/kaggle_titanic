@@ -21,7 +21,9 @@ print("End read output")
 
 #%% Clean
 
+
 #%% Explore
+train.hist(bins=50, figsize=(20,15))
 
 #%% Train
 
