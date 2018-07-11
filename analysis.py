@@ -20,11 +20,11 @@ from sklearn import preprocessing as pre
 
 # In[14]:
 
-
-gender_submission = pd.read_csv("gender_submission.csv")
-print("GENDER_SUBMISSION: " + str(gender_submission.head()))
-print(gender_submission.describe())
+#gender_submission = pd.read_csv("gender_submission.csv")
+#print("GENDER_SUBMISSION: " + str(gender_submission.head()))
+#print(gender_submission.describe())
 # What is gender_submission.csv even used for?
+# Answer: It's just an example submission file.
 
 
 # In[15]:
@@ -33,11 +33,15 @@ print(gender_submission.describe())
 train = pd.read_csv("train.csv")
 print(train.describe())
 
+df = train.groupby(['Pclass', 'Survived'], as_index=False) \
+          .count() \
+          [['Pclass', 'Survived', 'PassengerId']]
+
 
 # In[16]:
 
 
-test = pd.read_csv("train.csv")
+test = pd.read_csv("test.csv")
 print(test.describe())
 print(test.info())
 
@@ -80,6 +84,13 @@ print(ohe.fit_transform(new_cat_features))
 print(train_cats["Embarked"])
 """
 
+# Also:
+# Use transformation on highly-skewed variables to make them be more normally distributed.
+# Simply taking the log is often a good rough approximation, look up the Box-Cox test
+# for info on how to apply a better transformation, tuned to the specific data at hand.
+plt.hist(train_clean.Fare)
+plt.hist(train_clean.Fare.apply(lambda x: 0 if x <= 0 else np.log(x)))
+
 
 # In[19]:
 
@@ -98,6 +109,8 @@ corr_matrix = train_clean.corr()
 corr = corr_matrix["Survived"].sort_values(ascending=False)
 print(corr)
 
+
+# TODO: Use scikit's built-in for this.
 to_normalize = ["Age", "Fare", "Parch", "Pclass", "SibSp"]
 f = lambda col: (col - col.mean())/(col.max() - col.min())
 x_train_norm = train_clean.copy()
@@ -127,6 +140,15 @@ m_survive = m['Survived'].sum()/num_m
 print("#m: {}; #f: {};\n%m: {}; %f: {}".format(num_f, num_m, f_survive, m_survive))
 
 
+# I would do this.
+df = train_clean.groupby(['Sex', 'Survived'], as_index=False).count()[['Sex', 'Survived', 'PassengerId']].rename(columns={'PassengerId': 'PassengerCount'})
+df['TotalProportion'] = df.PassengerCount/df.PassengerCount.sum()
+females = df[df['Sex'] == 0]['PassengerCount'].sum()
+males = df[df['Sex'] == 1]['PassengerCount'].sum()
+df['WithinSexProportion'] = df.apply(lambda x: x.PassengerCount/females if x.Sex == 0 else x.PassengerCount/males, axis=1)
+df
+
+
 # In[60]:
 
 
@@ -151,9 +173,38 @@ scatter = pd.plotting.scatter_matrix(
     alpha=0.1
 )
 
+# Scatter matrix won't be as useful here since we're mostly plotting continuous vs
+# categorical variables. Boxplots would be my go-to tool, and plotting only the
+# continuous vs continuous variable interactions with a scatter matrix.
+scatter = pd.plotting.scatter_matrix(
+    train_clean[["Survived", "Fare", "Age"]], 
+    figsize=(12, 8), 
+    alpha=0.3
+)
+
+train_clean.boxplot(by='Survived', figsize=(20,20))
+train_clean.boxplot(column='Age', by='Survived', figsize=(20,20))
+train_clean.boxplot(column='Parch', by='Survived', figsize=(20,20))
+train_clean.boxplot(column='SibSp', by='Survived', figsize=(20,20))
+
+# Boxplots aren't doing a good job of revealing patterns in categorical vs categorical.
+def stacked_bar(df, x, y):
+    df2 = train_clean.groupby([x, y])[y].count().unstack(y)
+    df2.plot(kind='bar', stacked=True)
+
+stacked_bar(train_clean, 'Pclass', 'Survived')
+stacked_bar(train_clean, 'Parch', 'Survived')
+stacked_bar(train_clean, 'Sex', 'Survived')
+
+
+
 
 # Did not show much. I just wanted to try it out. 
-# 
+# When you filter to just thhe continuous vs continuous dimensions 
+# the skew in Fare becomes apparent.
+# Also, Fare and Age are positively correlated.
+# Age also seems skewed, and there's a clear jump in count when age > 18,
+# indicating a potential mixed distribution around children vs. adults.
 # Normalize now?
 
 # In[69]:
@@ -173,6 +224,8 @@ Fare           float64
 Cabin           object
 Embarked        object
 """
+# Need to use more features to get better performance here.
+# E.g. Pclass seems pretty relevant to survival rate for example.
 to_use = ["Sex", "Age", "Fare"]
 
 # Are we missing in data in columns we care about? If so, fill with median
@@ -222,4 +275,7 @@ print("Recall: {}".format(cm[1][1]/(cm[1][1] + cm[1][0])))
 print(metrics.precision_score(y_train, results))
 print(metrics.recall_score(y_train, results))
 print(metrics.f1_score(y_train, results)) # Harmonic mean of Precision and Recall
+
+
+
 
