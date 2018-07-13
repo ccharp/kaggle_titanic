@@ -163,6 +163,9 @@ train_clean[["Pclass", "Fare"]].corr()
 
 # ^ These are strongly correlated. Group? 
 
+# This makes sense since 
+
+
 # In[62]:
 
 
@@ -197,17 +200,75 @@ stacked_bar(train_clean, 'Parch', 'Survived')
 stacked_bar(train_clean, 'Sex', 'Survived')
 
 
-
-
 # Did not show much. I just wanted to try it out. 
-# When you filter to just thhe continuous vs continuous dimensions 
+# Normalize now?
+
+# When you filter to just the continuous vs continuous dimensions 
 # the skew in Fare becomes apparent.
 # Also, Fare and Age are positively correlated.
 # Age also seems skewed, and there's a clear jump in count when age > 18,
 # indicating a potential mixed distribution around children vs. adults.
-# Normalize now?
 
-# In[69]:
+# Experimenting with plydata & plotnine
+from plydata import *
+from plotnine import *
+(train_clean >>
+  group_by('Survived', 'Pclass') >>
+  summarize(NumPassengers='len(Survived)') >>
+  define(PercentOfTotal='NumPassengers / sum(NumPassengers)')
+) >> (
+ggplot() +
+  geom_bar(aes(x='Pclass', y='NumPassengers', fill='Survived'), stat='identity')
+)
+
+# Same plot but with Survived as a category. Looks like visualization adapts
+# to use a qualitative color mapping, as I would expect from ggplot in R.
+(train_clean >>
+  define(Survived = 'Survived.astype("category")') >>
+  group_by('Survived', 'Pclass') >>
+  summarize(NumPassengers='len(Survived)') >>
+  define(PercentOfTotal='NumPassengers / sum(NumPassengers)')
+) >> (
+ggplot() +
+  geom_bar(aes(x='Pclass', y='NumPassengers', fill='Survived'), stat='identity')
+)
+
+# Define a function to do it, call it on a few columns to see what's up.
+def stacked_bar(df, x, y):
+    return (df >>
+      define(x_cat = '{0}.astype("category")'.format(x),
+             y_cat = '{0}.astype("category")'.format(y)) >>
+      group_by('x_cat', 'y_cat') >>
+      summarize(Count='len(y_cat)')
+    ) >> (
+    ggplot() +
+      geom_bar(aes(x='x_cat', y='Count', fill='y_cat'), stat='identity') + 
+      labs(title='Count of {0} by {1}'.format(y, x), x=x, fill=y)
+    )
+
+# Mostly men died.
+stacked_bar(train_clean, 'Sex', 'Survived') # Greater in-group proportion of them
+stacked_bar(train_clean, 'Survived', 'Sex') # Also make up vast majority of total deaths
+
+# 3rd, 2nd, and 1st class, in that order, were the most deadly.
+stacked_bar(train_clean, 'Pclass', 'Survived') # Largest in-group proportion
+stacked_bar(train_clean, 'Survived', 'Pclass') # 3rd class passengers make up ~75% of total deaths
+
+# Technically Parch and Sibsp aren't categoricals, so this is a bit wonky.
+# These two should probably be combined into a new, separate feature.
+# For example: FamilySize = Parch + Sibsp
+# Looks like it's harder for people with more family members onboard to survive.
+# Perhaps families died together? Could we pull out surname from Name field and use
+# that as a feature? Might not generalize well, but worth exploring.
+stacked_bar(train_clean, 'Parch', 'Survived')
+stacked_bar(train_clean, 'Survived', 'Parch') # Basically no-one with 3 or more parents/children aboard survived
+
+stacked_bar(train_clean, 'SibSp', 'Survived')
+stacked_bar(train_clean, 'Survived', 'SibSp') # Basically no-one with 3 or more sibling/spouses aboard survived
+
+train_clean['FamiliySize'] = train_clean['Parch'] + train_clean['SibSp']
+stacked_bar(train_clean, 'FamiliySize', 'Survived')
+stacked_bar(train_clean, 'Survived', 'FamiliySize') # Yeah, basically 3+ family members = death.
 
 
 """
@@ -275,6 +336,7 @@ print("Recall: {}".format(cm[1][1]/(cm[1][1] + cm[1][0])))
 print(metrics.precision_score(y_train, results))
 print(metrics.recall_score(y_train, results))
 print(metrics.f1_score(y_train, results)) # Harmonic mean of Precision and Recall
+
 
 
 
