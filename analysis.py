@@ -294,6 +294,17 @@ stacked_bar(train_clean, 'Embarked', 'Pclass')
 stacked_bar(train_clean, 'Pclass', 'Embarked')
 
 
+# TODO:
+# 0) Exploration & Feature Generation
+#    - e.g. Surname, Title (Dr., Mrs., Ms.)
+# 1) Cleanup
+#    - normalization, scale, dummy variables
+# 2) Split train_clean into train and validation sets.
+# 3) Train model(s) on the train set.
+#    - Use cross validation, minimize appropriate error metric.
+# 4) Assess model generalizability on validation set.
+
+
 """
 PassengerId      int64
 Survived         int64
