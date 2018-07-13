@@ -267,8 +267,31 @@ stacked_bar(train_clean, 'SibSp', 'Survived')
 stacked_bar(train_clean, 'Survived', 'SibSp') # Basically no-one with 3 or more sibling/spouses aboard survived
 
 train_clean['FamiliySize'] = train_clean['Parch'] + train_clean['SibSp']
+test['FamiliySize'] = test['Parch'] + test['SibSp']
 stacked_bar(train_clean, 'FamiliySize', 'Survived')
 stacked_bar(train_clean, 'Survived', 'FamiliySize') # Yeah, basically 3+ family members = death.
+
+train_clean['BigFamily'] = train_clean['FamiliySize'].apply(lambda x: x > 3)
+test['BigFamily'] = test['FamiliySize'].apply(lambda x: x > 3)
+stacked_bar(train_clean, 'BigFamily', 'Survived')
+stacked_bar(train_clean, 'Survived', 'BigFamily') # Yeah, basically 3+ family members = death.
+
+# A few more features
+train_clean['Age'].hist(bins=50)
+train_clean['AgeGroup'] = train_clean['Age'].apply(lambda x: 'Child' if x <= 18 else 'Adult')
+test['AgeGroup'] = test['Age'].apply(lambda x: 'Child' if x <= 18 else 'Adult')
+stacked_bar(train_clean, 'AgeGroup', 'Survived')
+stacked_bar(train_clean, 'Survived', 'AgeGroup')
+
+# Embarked point could relate to passenger class, maybe different points
+# have different levels of affluence, different cultures/norms that could
+# influence behavior.
+# May shed extra light on Pclass vs Survived dimension.
+stacked_bar(train_clean, 'Embarked', 'Survived')
+stacked_bar(train_clean, 'Survived', 'Embarked')
+stacked_bar(train_clean, 'Pclass', 'Embarked')
+stacked_bar(train_clean, 'Embarked', 'Pclass')
+stacked_bar(train_clean, 'Pclass', 'Embarked')
 
 
 """
