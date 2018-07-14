@@ -15,11 +15,6 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing as pre
 
-
-# ## Import data
-
-# In[14]:
-
 #gender_submission = pd.read_csv("gender_submission.csv")
 #print("GENDER_SUBMISSION: " + str(gender_submission.head()))
 #print(gender_submission.describe())
@@ -141,12 +136,14 @@ print("#m: {}; #f: {};\n%m: {}; %f: {}".format(num_f, num_m, f_survive, m_surviv
 
 
 # I would do this.
+""" CSC: key error, not sure what you're trying to do
 df = train_clean.groupby(['Sex', 'Survived'], as_index=False).count()[['Sex', 'Survived', 'PassengerId']].rename(columns={'PassengerId': 'PassengerCount'})
 df['TotalProportion'] = df.PassengerCount/df.PassengerCount.sum()
 females = df[df['Sex'] == 0]['PassengerCount'].sum()
 males = df[df['Sex'] == 1]['PassengerCount'].sum()
 df['WithinSexProportion'] = df.apply(lambda x: x.PassengerCount/females if x.Sex == 0 else x.PassengerCount/males, axis=1)
 df
+""" 
 
 
 # In[60]:
