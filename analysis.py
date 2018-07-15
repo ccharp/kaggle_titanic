@@ -141,7 +141,7 @@ print("#m: {}; #f: {};\n%m: {}; %f: {}".format(num_f, num_m, f_survive, m_surviv
 
 
 # I would do this.
-df = train_clean.groupby(['Sex', 'Survived'], as_index=False).count()[['Sex', 'Survived', 'PassengerId']].rename(columns={'PassengerId': 'PassengerCount'})
+df = train_clean.groupby(['Sex', 'Survived'], as_index=False).count()[['Sex', 'Survived', 'Pclass']].rename(columns={'Pclass': 'PassengerCount'})
 df['TotalProportion'] = df.PassengerCount/df.PassengerCount.sum()
 females = df[df['Sex'] == 0]['PassengerCount'].sum()
 males = df[df['Sex'] == 1]['PassengerCount'].sum()
@@ -293,16 +293,32 @@ stacked_bar(train_clean, 'Pclass', 'Embarked')
 stacked_bar(train_clean, 'Embarked', 'Pclass')
 stacked_bar(train_clean, 'Pclass', 'Embarked')
 
+# 
+scatter = pd.plotting.scatter_matrix(
+    train_clean[["Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]],
+    figsize=(13, 13),
+    alpha=0.13
+)
+
+
+
 
 # TODO:
 # 0) Exploration & Feature Generation
-#    - e.g. Surname, Title (Dr., Mrs., Ms.)
+#    - Surname, Title (Dr., Mrs., Ms.)
+#    - Cabin letter & number parsed out as separate columns
 # 1) Cleanup
-#    - normalization, scale, dummy variables
+#    - Normalize skewed variables (Box-Cox transform)
+#    - Scale
+#    - Ddummy variables
+#    - Impute/fill missing Age (maybe using Fare?), Cabin, Embarked, etc.
 # 2) Split train_clean into train and validation sets.
 # 3) Train model(s) on the train set.
 #    - Use cross validation, minimize appropriate error metric.
 # 4) Assess model generalizability on validation set.
+
+train_clean = train.copy()
+
 
 
 """
