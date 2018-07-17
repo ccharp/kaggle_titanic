@@ -15,11 +15,6 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing as pre
 
-
-# ## Import data
-
-# In[14]:
-
 #gender_submission = pd.read_csv("gender_submission.csv")
 #print("GENDER_SUBMISSION: " + str(gender_submission.head()))
 #print(gender_submission.describe())
@@ -149,6 +144,7 @@ df['WithinSexProportion'] = df.apply(lambda x: x.PassengerCount/females if x.Sex
 df
 
 
+
 # In[60]:
 
 
@@ -234,7 +230,7 @@ ggplot() +
 )
 
 # Define a function to do it, call it on a few columns to see what's up.
-def stacked_bar(df, x, y):
+def stacked_bar(df, x, y, ratio=False):
     return (df >>
       define(x_cat = '{0}.astype("category")'.format(x),
              y_cat = '{0}.astype("category")'.format(y)) >>
@@ -244,10 +240,11 @@ def stacked_bar(df, x, y):
     ggplot() +
       geom_bar(aes(x='x_cat', y='Count', fill='y_cat'), stat='identity') + 
       labs(title='Count of {0} by {1}'.format(y, x), x=x, fill=y)
+
     )
 
 # Mostly men died.
-stacked_bar(train_clean, 'Sex', 'Survived') # Greater in-group proportion of them
+stacked_bar(train_clean, 'Sex', 'Survived', True) # Greater in-group proportion of them
 stacked_bar(train_clean, 'Survived', 'Sex') # Also make up vast majority of total deaths
 
 # 3rd, 2nd, and 1st class, in that order, were the most deadly.
@@ -283,6 +280,9 @@ test['AgeGroup'] = test['Age'].apply(lambda x: 'Child' if x <= 18 else 'Adult')
 stacked_bar(train_clean, 'AgeGroup', 'Survived')
 stacked_bar(train_clean, 'Survived', 'AgeGroup')
 
+train_clean["AgeGroup2"] = pd.qcut(train_clean["Age"], 10)
+stacked_bar(train_clean, "AgeGroup2", "Survived")
+
 # Embarked point could relate to passenger class, maybe different points
 # have different levels of affluence, different cultures/norms that could
 # influence behavior.
@@ -293,24 +293,20 @@ stacked_bar(train_clean, 'Pclass', 'Embarked')
 stacked_bar(train_clean, 'Embarked', 'Pclass')
 stacked_bar(train_clean, 'Pclass', 'Embarked')
 
-# 
-scatter = pd.plotting.scatter_matrix(
-    train_clean[["Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]],
-    figsize=(13, 13),
-    alpha=0.13
-)
-
-
 
 
 # TODO:
 # 0) Exploration & Feature Generation
 #    - Surname, Title (Dr., Mrs., Ms.)
-#    - Cabin letter & number parsed out as separate columns
+#    - CabinLetter & CabinNumber parsed out as separate columns
+#    - FamilySize = Parch + SibSp
+#    - FamilySize -> categorical
+#    - Ratio of Parch or SibSp to Family size
+#    - AgeGroup = Age categorical
 # 1) Cleanup
 #    - Normalize skewed variables (Box-Cox transform)
 #    - Scale
-#    - Ddummy variables
+#    - Dummy variables
 #    - Impute/fill missing Age (maybe using Fare?), Cabin, Embarked, etc.
 # 2) Split train_clean into train and validation sets.
 # 3) Train model(s) on the train set.
