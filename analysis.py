@@ -142,6 +142,7 @@ females = df[df['Sex'] == 0]['PassengerCount'].sum()
 males = df[df['Sex'] == 1]['PassengerCount'].sum()
 df['WithinSexProportion'] = df.apply(lambda x: x.PassengerCount/females if x.Sex == 0 else x.PassengerCount/males, axis=1)
 df
+""" 
 
 
 
